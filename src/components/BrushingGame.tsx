@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TransparentVideoPlayer from './TransparentVideoPlayer';
 import TransparentImage from './TransparentImage';
 import { MascotWrapper } from './MascotWrapper';
-import { SpeechBubble } from './SpeechBubble';
 
 // Game states
 type BrushState = 'dirty' | 'brushing' | 'transition' | 'clean';
@@ -29,6 +28,17 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
     setState('clean');
   };
 
+  // Safe fallback to prevent getting stuck
+  useEffect(() => {
+    let timer: ReturnType<typeof globalThis.setTimeout>;
+    if (state === 'brushing') {
+      timer = globalThis.setTimeout(handleBrushVideoEnd, 8000); // Fail safe after 8s
+    } else if (state === 'transition') {
+      timer = globalThis.setTimeout(handleTransitionEnd, 4000); // Fail safe after 4s
+    }
+    return () => globalThis.clearTimeout(timer);
+  }, [state]);
+
   return (
     <div
       className="scene-wrapper"
@@ -51,19 +61,10 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
         ← Back
       </motion.button>
 
-      {/* Level badge top-right */}
-      <div
-        className="star-badge"
-        style={{
-          position: 'absolute', top: 'var(--sp-4)', right: 'var(--sp-4)',
-          zIndex: 10, background: 'var(--color-sky)',
-        }}
-      >
-        🦷 Level 1
-      </div>
 
 
-      {/* Scene content */}
+
+      {/* Scene content - no bottom padding needed, buttons are fixed */}
       <div className="scene-content">
 
         {/* Speech bubble */}
@@ -99,8 +100,8 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
 
           {/* DIRTY state — JPG still, multiply removes white bg */}
           {state === 'dirty' && (
-            <MascotWrapper key="mascot-dirty"
-              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+            <MascotWrapper key="mascot-dirty" width="100%" height="auto" style={{ maxWidth: 500, aspectRatio: '1/1' }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentImage
                 src="/assets/images/dirty_teeth.jpg"
@@ -123,13 +124,13 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
 
           {/* BRUSHING — green screen MP4 via canvas chroma-key */}
           {state === 'brushing' && (
-            <MascotWrapper key="mascot-brushing"
+            <MascotWrapper key="mascot-brushing" width="100%" height="auto" style={{ maxWidth: 500, aspectRatio: '1/1' }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentVideoPlayer
                 src="/assets/video/brushing.mp4"
-                width={260}
-                height={260}
+                width="100%"
+                height="100%"
                 loop={false}
                 autoPlay
                 onEnded={handleBrushVideoEnd}
@@ -139,13 +140,13 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
 
           {/* TRANSITION — mouth_dirty_to_clean.mp4 */}
           {state === 'transition' && (
-            <MascotWrapper key="mascot-transition"
+            <MascotWrapper key="mascot-transition" width="100%" height="auto" style={{ maxWidth: 500, aspectRatio: '1/1' }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentVideoPlayer
                 src="/assets/video/mouth_dirty_to_clean.mp4"
-                width={260}
-                height={260}
+                width="100%"
+                height="100%"
                 loop={false}
                 autoPlay
                 onEnded={handleTransitionEnd}
@@ -155,8 +156,8 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
 
           {/* CLEAN — clean_teeth.jpg still */}
           {state === 'clean' && (
-            <MascotWrapper key="mascot-clean"
-              initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+            <MascotWrapper key="mascot-clean" width="100%" height="auto" style={{ maxWidth: 500, aspectRatio: '1/1' }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentImage
                 src="/assets/images/clean_teeth.jpg"
@@ -179,8 +180,10 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
             </MascotWrapper>
           )}
         </AnimatePresence>
+      </div>
 
-        {/* Action button */}
+      {/* Action buttons - fixed above the bottom HUD */}
+      <div style={{ position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
         <AnimatePresence mode="wait">
           {state === 'dirty' && (
             <motion.button key="btn-start" className="btn-primary"
@@ -188,14 +191,21 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
               whileTap={{ scale: 0.94 }} onClick={startBrushing}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             >
-              🪥 Start Brushing!
+              🪵 Start Brushing!
             </motion.button>
           )}
 
           {(state === 'brushing' || state === 'transition') && (
-            <SpeechBubble key="wait-msg">
+            <motion.div key="wait-msg"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{
+                background: 'rgba(255,255,255,0.9)', borderRadius: '999px',
+                padding: '10px 24px', fontFamily: 'var(--font-display)', fontWeight: 700,
+                fontSize: 'var(--fs-base)', boxShadow: 'var(--shadow-float)'
+              }}
+            >
               🎵 Brush brush brush…
-            </SpeechBubble>
+            </motion.div>
           )}
 
           {state === 'clean' && (

@@ -83,18 +83,10 @@ export default function TrashSortGame({ onComplete, onBack }: Readonly<TrashSort
         ← Back
       </motion.button>
 
-      <div
-        className="star-badge"
-        style={{
-          position: 'absolute', top: 'var(--sp-4)', right: 'var(--sp-4)',
-          zIndex: 10, background: 'var(--color-mint)',
-        }}
-      >
-        ♻️ Level 3
-      </div>
 
 
-      <div className="scene-content" style={{ maxWidth: 600 }}>
+
+      <div className="scene-content" style={{ maxWidth: 600, paddingBottom: '120px' }}>
 
         {/* Win state */}
         <AnimatePresence>
@@ -104,7 +96,7 @@ export default function TrashSortGame({ onComplete, onBack }: Readonly<TrashSort
             >
               <TransparentVideoPlayer
                 src="/assets/video/pickup_trash.mp4"
-                width={280} height={280}
+                width="100%" height="100%" style={{ maxWidth: 500, aspectRatio: '1/1' }}
                 loop={false} autoPlay
               />
               <motion.button className="btn-mint"

@@ -30,7 +30,7 @@ export function BinZone({ id, label, image, isOver, feedback }: Readonly<BinZone
                 src={image}
                 alt={label}
                 className="mascot-img"
-                style={{ width: 90, height: 90 }}
+                style={{ width: 160, height: 160 }}
             />
             <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-sm)', color: 'var(--color-text)' }}>
                 {label}

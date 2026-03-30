@@ -27,9 +27,9 @@ export function DragItem({ item }: Readonly<{ item: TrashItem }>) {
                 src={item.image}
                 alt={item.label}
                 className="prop-img"
-                style={{ width: 72, height: 72 }}
+                style={{ width: 140, height: 140 }}
             />
-            <p style={{ fontSize: 'var(--fs-xs)', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, marginTop: 4 }}>
+            <p style={{ fontSize: 'var(--fs-sm)', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, marginTop: 4 }}>
                 {item.label}
             </p>
         </div>

@@ -2,8 +2,8 @@ import { useEffect, useRef, useCallback } from 'react';
 
 interface TransparentVideoPlayerProps {
     src: string;
-    width?: number;
-    height?: number;
+    width?: number | string;
+    height?: number | string;
     loop?: boolean;
     autoPlay?: boolean;
     onEnded?: () => void;

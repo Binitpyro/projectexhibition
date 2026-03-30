@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import TransparentVideoPlayer from './TransparentVideoPlayer';
 import TransparentImage from './TransparentImage';
 import { MascotWrapper } from './MascotWrapper';
-import { SpeechBubble } from './SpeechBubble';
 
 type WashState = 'dirty' | 'washing' | 'clean';
 
@@ -58,18 +57,10 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
         ← Back
       </motion.button>
 
-      <div
-        className="star-badge"
-        style={{
-          position: 'absolute', top: 'var(--sp-4)', right: 'var(--sp-4)',
-          zIndex: 10, background: 'var(--color-lilac)',
-        }}
-      >
-        🧴 Level 2
-      </div>
 
 
-      <div className="scene-content">
+
+      <div className="scene-content" style={{ paddingBottom: '120px' }}>
 
         {/* Speech bubble */}
         <AnimatePresence mode="wait">
@@ -98,8 +89,8 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
 
           {/* DIRTY state */}
           {state === 'dirty' && (
-            <MascotWrapper key="hw-mascot-dirty"
-              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+            <MascotWrapper key="hw-mascot-dirty" width="100%" height="auto" style={{ maxWidth: 500, aspectRatio: '1/1' }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentImage
                 src="/assets/images/dirty_hands.jpg"
@@ -121,13 +112,13 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
 
           {/* WASHING — green screen via canvas */}
           {state === 'washing' && (
-            <MascotWrapper key="hw-mascot-washing"
+            <MascotWrapper key="hw-mascot-washing" width="100%" height="auto" style={{ maxWidth: 500, aspectRatio: '1/1' }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentVideoPlayer
                 src="/assets/video/cleaning_hand.mp4"
-                width={260}
-                height={260}
+                width="100%"
+                height="100%"
                 loop={false}
                 autoPlay
                 onEnded={handleWashVideoEnd}
@@ -137,8 +128,8 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
 
           {/* CLEAN state */}
           {state === 'clean' && (
-            <MascotWrapper key="hw-mascot-clean"
-              initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+            <MascotWrapper key="hw-mascot-clean" width="100%" height="auto" style={{ maxWidth: 500, aspectRatio: '1/1' }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentImage
                 src="/assets/images/clean_hands.jpg"
@@ -158,19 +149,10 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
             </MascotWrapper>
           )}
         </AnimatePresence>
+      </div>
 
-        {/* Progress bar (only while dirty) */}
-        <AnimatePresence>
-          {state === 'dirty' && (
-            <motion.div className="progress-track" style={{ width: 260 }}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            >
-              <div className="progress-fill" style={{ width: `${progress}%` }} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Action button */}
+      {/* Action buttons - fixed above the bottom HUD */}
+      <div style={{ position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
         <AnimatePresence mode="wait">
           {state === 'dirty' && (
             <motion.button
@@ -187,9 +169,16 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
             </motion.button>
           )}
           {state === 'washing' && (
-            <SpeechBubble key="wait-wash">
-              🫧 Washing…
-            </SpeechBubble>
+            <motion.div key="wait-wash"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{
+                background: 'rgba(255,255,255,0.9)', borderRadius: '999px',
+                padding: '10px 24px', fontFamily: 'var(--font-display)', fontWeight: 700,
+                fontSize: 'var(--fs-base)', boxShadow: 'var(--shadow-float)'
+              }}
+            >
+              🪷 Washing…
+            </motion.div>
           )}
           {state === 'clean' && (
             <motion.button key="btn-next" className="btn-mint"

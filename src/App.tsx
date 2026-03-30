@@ -5,7 +5,7 @@ import BrushingGame from './components/BrushingGame';
 import HandWashingGame from './components/HandWashingGame';
 import TrashSortGame from './components/TrashSortGame';
 import SuccessScreen from './components/SuccessScreen';
-import { getStreak, incrementStreak } from './utils/storage';
+import { getStreak, incrementStreak, markGameComplete } from './utils/storage';
 
 // Scene flow: welcome → brushing → handwash → trash → success (then back to welcome)
 type Scene = 'welcome' | 'brushing' | 'handwash' | 'trash' | 'success';
@@ -20,6 +20,8 @@ function App() {
   const goToScene = (nextScene: Scene) => setScene(nextScene);
 
   const handleLevelComplete = () => {
+    markGameComplete(scene); // Track this game's completion today!
+
     const newCount = completedCount + 1;
     setCompletedCount(newCount);
 
@@ -56,19 +58,22 @@ function App() {
         {(scene === 'brushing' || scene === 'handwash' || scene === 'trash') && (
           <motion.div
             key="hud"
-            initial={{ y: -60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -60, opacity: 0 }}
+            initial={{ y: -60, x: '-50%', opacity: 0 }}
+            animate={{ y: 0, x: '-50%', opacity: 1 }}
+            exit={{ y: -60, x: '-50%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 22 }}
             style={{
               position: 'fixed',
               bottom: 'var(--sp-5)',
               left: '50%',
-              transform: 'translateX(-50%)',
               zIndex: 100,
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: 'var(--sp-3)',
+              flexWrap: 'wrap',
+              width: 'max-content',
+              maxWidth: '90vw',
               background: 'rgba(255,255,255,0.85)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
@@ -98,9 +103,8 @@ function App() {
               if (isCurrent) opacity = 1;
               else if (isPast) opacity = 0.5;
 
-              let bg = 'rgba(42,63,85,0.15)';
-              if (isCurrent) bg = 'var(--color-sky)';
-              else if (isCompleted) bg = 'var(--color-mint)';
+              let bg = '#FCD34D'; // Yellow for incomplete/current by default
+              if (isCompleted) bg = 'var(--color-mint)'; // Green for finished
 
               return (
                 <div

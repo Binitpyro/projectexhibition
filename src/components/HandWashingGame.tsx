@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TransparentVideoPlayer from './TransparentVideoPlayer';
 import TransparentImage from './TransparentImage';
 import { MascotWrapper } from './MascotWrapper';
+import { getAssetUrl } from '../utils/asset';
 
 type WashState = 'dirty' | 'washing' | 'clean';
 
@@ -37,11 +38,34 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
     setState('clean');
   };
 
+  useEffect(() => {
+    return () => {
+      if (holdRef.current) clearInterval(holdRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof globalThis.setTimeout>;
+    if (state === 'washing') {
+      timer = globalThis.setTimeout(handleWashVideoEnd, 6000);
+    }
+    return () => {
+      if (timer) globalThis.clearTimeout(timer);
+    };
+  }, [state]);
+
+  const [clickedNext, setClickedNext] = useState(false);
+  const handleNext = () => {
+    if (clickedNext) return;
+    setClickedNext(true);
+    onComplete();
+  };
+
   return (
     <div
       className="scene-wrapper"
       style={{
-        backgroundImage: 'url(/assets/images/bathroom_bg.jpg)',
+        backgroundImage: `url(${getAssetUrl('/assets/images/bathroom_bg.jpg')})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
@@ -93,7 +117,7 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentImage
-                src="/assets/images/dirty_hands.jpg"
+                src={getAssetUrl('/assets/images/dirty_hands.jpg')}
                 alt="Robo with dirty hands"
                 className="mascot-img"
                 style={{ width: '100%', height: '100%' }}
@@ -116,7 +140,7 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentVideoPlayer
-                src="/assets/video/cleaning_hand.mp4"
+                src={getAssetUrl('/assets/video/cleaning_hand.mp4')}
                 width="100%"
                 height="100%"
                 loop={false}
@@ -132,7 +156,7 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentImage
-                src="/assets/images/clean_hands.jpg"
+                src={getAssetUrl('/assets/images/clean_hands.jpg')}
                 alt="Robo with clean hands"
                 className="mascot-img"
                 style={{ width: '100%', height: '100%' }}
@@ -158,14 +182,15 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
             <motion.button
               key="btn-hold"
               className="btn-lilac"
-              style={{ minWidth: 220, fontSize: 'var(--fs-lg)', userSelect: 'none' }}
+              style={{ minWidth: 220, fontSize: 'var(--fs-lg)', userSelect: 'none', position: 'relative', overflow: 'hidden' }}
               onPointerDown={startHolding}
               onPointerUp={stopHolding}
               onPointerLeave={stopHolding}
               whileTap={{ scale: 0.94 }}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             >
-              💧 Hold to Scrub!
+              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, background: 'rgba(255,255,255,0.4)', width: `${progress}%`, transition: 'width 0.1s linear' }} />
+              <span style={{ position: 'relative', zIndex: 1 }}>💧 Hold to Scrub!</span>
             </motion.button>
           )}
           {state === 'washing' && (
@@ -183,7 +208,7 @@ export default function HandWashingGame({ onComplete, onBack }: Readonly<HandWas
           {state === 'clean' && (
             <motion.button key="btn-next" className="btn-mint"
               style={{ minWidth: 220, fontSize: 'var(--fs-lg)' }}
-              whileTap={{ scale: 0.94 }} onClick={onComplete}
+              whileTap={{ scale: 0.94 }} onClick={handleNext}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             >
               👏 Next Level!

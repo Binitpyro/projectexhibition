@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import WelcomeScreen from './components/WelcomeScreen';
 import BrushingGame from './components/BrushingGame';
@@ -16,6 +16,31 @@ function App() {
   const [scene, setScene] = useState<Scene>('welcome');
   const [streak, setStreak] = useState(() => getStreak());
   const [completedCount, setCompletedCount] = useState(0);
+
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const resetIdle = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        if (scene !== 'welcome' && scene !== 'success') {
+          setScene('welcome');
+          setCompletedCount(0);
+        }
+      }, 45000);
+    };
+
+    resetIdle();
+
+    globalThis.addEventListener('pointerdown', resetIdle);
+    globalThis.addEventListener('touchstart', resetIdle);
+
+    return () => {
+      clearTimeout(timeout);
+      globalThis.removeEventListener('pointerdown', resetIdle);
+      globalThis.removeEventListener('touchstart', resetIdle);
+    };
+  }, [scene]);
 
   const goToScene = (nextScene: Scene) => setScene(nextScene);
 

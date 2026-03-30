@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import TransparentVideoPlayer from './TransparentVideoPlayer';
 import TransparentImage from './TransparentImage';
 import { MascotWrapper } from './MascotWrapper';
+import { getAssetUrl } from '../utils/asset';
 
 // Game states
 type BrushState = 'dirty' | 'brushing' | 'transition' | 'clean';
@@ -30,20 +31,29 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
 
   // Safe fallback to prevent getting stuck
   useEffect(() => {
-    let timer: ReturnType<typeof globalThis.setTimeout>;
+    let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
     if (state === 'brushing') {
       timer = globalThis.setTimeout(handleBrushVideoEnd, 8000); // Fail safe after 8s
     } else if (state === 'transition') {
       timer = globalThis.setTimeout(handleTransitionEnd, 4000); // Fail safe after 4s
     }
-    return () => globalThis.clearTimeout(timer);
+    return () => {
+      if (timer) globalThis.clearTimeout(timer);
+    };
   }, [state]);
+
+  const [clickedNext, setClickedNext] = useState(false);
+  const handleNext = () => {
+    if (clickedNext) return;
+    setClickedNext(true);
+    onComplete();
+  };
 
   return (
     <div
       className="scene-wrapper"
       style={{
-        backgroundImage: 'url(/assets/images/bathroom_bg.jpg)',
+        backgroundImage: `url(${getAssetUrl('/assets/images/bathroom_bg.jpg')})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
@@ -104,7 +114,7 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentImage
-                src="/assets/images/dirty_teeth.jpg"
+                src={getAssetUrl('/assets/images/dirty_teeth.jpg')}
                 alt="Robo with dirty teeth"
                 className="mascot-img"
                 style={{ width: '100%', height: '100%' }}
@@ -128,7 +138,7 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentVideoPlayer
-                src="/assets/video/brushing.mp4"
+                src={getAssetUrl('/assets/video/brushing.mp4')}
                 width="100%"
                 height="100%"
                 loop={false}
@@ -144,7 +154,7 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentVideoPlayer
-                src="/assets/video/mouth_dirty_to_clean.mp4"
+                src={getAssetUrl('/assets/video/mouth_dirty_to_clean.mp4')}
                 width="100%"
                 height="100%"
                 loop={false}
@@ -160,7 +170,7 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             >
               <TransparentImage
-                src="/assets/images/clean_teeth.jpg"
+                src={getAssetUrl('/assets/images/clean_teeth.jpg')}
                 alt="Robo with clean teeth"
                 className="mascot-img"
                 style={{ width: '100%', height: '100%' }}
@@ -211,7 +221,7 @@ export default function BrushingGame({ onComplete, onBack }: Readonly<BrushingGa
           {state === 'clean' && (
             <motion.button key="btn-next" className="btn-mint"
               style={{ minWidth: 220, fontSize: 'var(--fs-lg)' }}
-              whileTap={{ scale: 0.94 }} onClick={onComplete}
+              whileTap={{ scale: 0.94 }} onClick={handleNext}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             >
               👏 Next Level!

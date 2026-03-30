@@ -1,6 +1,6 @@
 export const getStreak = (): number => {
   const streak = localStorage.getItem('hygiene-streak');
-  return streak ? parseInt(streak, 10) : 0;
+  return streak ? Number.parseInt(streak, 10) : 0;
 };
 
 export const setStreak = (value: number): void => {
@@ -8,9 +8,17 @@ export const setStreak = (value: number): void => {
 };
 
 export const incrementStreak = (): number => {
+  const today = new Date().toISOString().split('T')[0];
+  const lastPlayed = localStorage.getItem('hygiene-last-played');
   const current = getStreak();
+
+  if (lastPlayed === today) {
+    return current; // Already incremented today
+  }
+
   const newStreak = current + 1;
   setStreak(newStreak);
+  localStorage.setItem('hygiene-last-played', today);
   return newStreak;
 };
 
@@ -20,9 +28,12 @@ const HISTORY_KEY = 'hygiene-history';
 export const getDailyHistory = (): Record<string, string[]> => {
   try {
     const dataStr = localStorage.getItem(HISTORY_KEY);
-    let history: Record<string, string[]> = dataStr ? JSON.parse(dataStr) : {};
 
-    let seeded = false;
+    if (dataStr) {
+      return JSON.parse(dataStr);
+    }
+
+    let history: Record<string, string[]> = {};
     const today = new Date();
 
     // Sequence of daily completions to make the calendar look realistic
@@ -50,14 +61,10 @@ export const getDailyHistory = (): Record<string, string[]> => {
 
       if (!history[dateStr]) {
         history[dateStr] = mockPatterns[i - 1];
-        seeded = true;
       }
     }
 
-    if (seeded) {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    }
-
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     return history;
   } catch {
     return {};

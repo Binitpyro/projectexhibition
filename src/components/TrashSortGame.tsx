@@ -1,12 +1,19 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
   DragEndEvent,
+  DragStartEvent,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  TouchSensor,
+  DragOverlay
 } from '@dnd-kit/core';
 import TransparentVideoPlayer from './TransparentVideoPlayer';
-import { DragItem, TrashItem } from './DragItem';
+import { DragItem, TrashItem, TrashItemCard } from './DragItem';
 import { BinZone } from './BinZone';
+import { getAssetUrl } from '../utils/asset';
 
 interface TrashSortGameProps {
   onComplete: () => void;
@@ -28,11 +35,30 @@ export default function TrashSortGame({ onComplete, onBack }: Readonly<TrashSort
   const [remaining, setRemaining] = useState<TrashItem[]>(TRASH_ITEMS);
   const [feedback, setFeedback] = useState<Record<string, 'correct' | 'wrong'>>({});
   const [overBin, setOverBin] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [won, setWon] = useState(false);
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      timeoutsRef.current.forEach(clearTimeout);
+    };
+  }, []);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setOverBin(null);
+    setActiveId(null);
     if (!over) return;
 
     const item = remaining.find(t => t.id === active.id);
@@ -44,30 +70,40 @@ export default function TrashSortGame({ onComplete, onBack }: Readonly<TrashSort
       setFeedback(fb => ({ ...fb, [over.id as string]: 'correct' }));
       setRemaining(next);
       if (next.length === 0) {
-        setTimeout(() => setWon(true), 500);
+        const t = setTimeout(() => setWon(true), 500);
+        timeoutsRef.current.push(t);
       } else {
-        setTimeout(() => setFeedback(fb => {
+        const t = setTimeout(() => setFeedback(fb => {
           const n = { ...fb };
           delete n[over.id as string];
           return n;
         }), 800);
+        timeoutsRef.current.push(t);
       }
     } else {
       // Wrong bin — shake feedback
       setFeedback(fb => ({ ...fb, [over.id as string]: 'wrong' }));
-      setTimeout(() => setFeedback(fb => {
+      const t = setTimeout(() => setFeedback(fb => {
         const n = { ...fb };
         delete n[over.id as string];
         return n;
       }), 800);
+      timeoutsRef.current.push(t);
     }
+  };
+
+  const [clickedNext, setClickedNext] = useState(false);
+  const handleNext = () => {
+    if (clickedNext) return;
+    setClickedNext(true);
+    onComplete();
   };
 
   return (
     <div
       className="scene-wrapper"
       style={{
-        backgroundImage: 'url(/assets/images/park_bg.jpg)',
+        backgroundImage: `url(${getAssetUrl('/assets/images/park_bg.jpg')})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
@@ -95,13 +131,13 @@ export default function TrashSortGame({ onComplete, onBack }: Readonly<TrashSort
               initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
             >
               <TransparentVideoPlayer
-                src="/assets/video/pickup_trash.mp4"
+                src={getAssetUrl('/assets/video/pickup_trash.mp4')}
                 width="100%" height="100%" style={{ maxWidth: 500, aspectRatio: '1/1' }}
                 loop={false} autoPlay
               />
               <motion.button className="btn-mint"
                 style={{ fontSize: 'var(--fs-lg)', minWidth: 220 }}
-                whileTap={{ scale: 0.94 }} onClick={onComplete}
+                whileTap={{ scale: 0.94 }} onClick={handleNext}
               >
                 🎉 Amazing! Next!
               </motion.button>
@@ -115,10 +151,14 @@ export default function TrashSortGame({ onComplete, onBack }: Readonly<TrashSort
             : '🎊 All sorted!'}
         </div>
 
-        <DndContext onDragEnd={handleDragEnd} onDragOver={e => setOverBin(e.over?.id as string ?? null)}>
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragOver={e => setOverBin(e.over?.id as string ?? null)}>
           {/* Draggable items */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', padding: '8px 0' }}>
-            {remaining.map(item => <DragItem key={item.id} item={item} />)}
+            {remaining.map(item => (
+              <motion.div key={item.id} layout transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}>
+                <DragItem item={item} />
+              </motion.div>
+            ))}
           </div>
 
           {/* Drop zones */}
@@ -126,18 +166,22 @@ export default function TrashSortGame({ onComplete, onBack }: Readonly<TrashSort
             <BinZone
               id="trash"
               label="Trash Bin"
-              image="/assets/images/trash_bin.jpg"
+              image={getAssetUrl('/assets/images/trash_bin.jpg')}
               isOver={overBin === 'trash'}
               feedback={feedback['trash']}
             />
             <BinZone
               id="recycle"
               label="Recycle Bin"
-              image="/assets/images/recycle_bin.jpg"
+              image={getAssetUrl('/assets/images/recycle_bin.jpg')}
               isOver={overBin === 'recycle'}
               feedback={feedback['recycle']}
             />
           </div>
+
+          <DragOverlay dropAnimation={{ duration: 250, easing: 'ease' }}>
+            {activeId ? <TrashItemCard item={TRASH_ITEMS.find(i => i.id === activeId)!} isOverlay /> : null}
+          </DragOverlay>
         </DndContext>
       </div>
     </div>

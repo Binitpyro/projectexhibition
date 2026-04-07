@@ -33,9 +33,22 @@ npm run build
 npm run preview
 ```
 
+## Standalone Desktop Build (Windows)
+You can compile this project into a standalone Windows executable (`.exe`). This utilizes Python, `pywebview`, and `pyinstaller` to bundle the Vite app into a single distributable file.
+
+1. Ensure you have Python installed and run the build script:
+```bash
+build-exe.bat
+```
+2. The script will automatically build the frontend assets, activate the virtual environment, and compile the application.
+3. The resulting `.exe` will be located in the `dist` folder.
+
 ## Technologies Used
 * **Framework**: React 18, Vite, TypeScript
+* **Backend/Database**: Supabase
+* **Icons**: Lucide React
 * **Animations**: Framer Motion
 * **Drag-and-Drop**: @dnd-kit/core
-* **Styling**: Vanilla CSS with comprehensive CSS Variables
+* **Styling**: Tailwind CSS
 * **Media**: HTML5 `<canvas>` for real-time video compositing and image alpha-channel masking
+* **Desktop Packaging**: Python, PyWebview, PyInstaller
